@@ -27,11 +27,13 @@ function removerDestaques() {
 
 // Destaca quadrados com base nos movimentos válidos
 function destacarQuadrados(destinos) {
-    removerDestaques();
-    destinos.forEach(dest => {
-        $('#board .square-' + dest).addClass('highlight');
-    });
+  removerDestaques();  // Remove quaisquer destaques anteriores
+  destinos.forEach(dest => {
+      // Destaca cada quadrado válido
+      $('#board .square-' + dest).addClass('highlight');
+  });
 }
+
 
 // Obtém os movimentos válidos para a peça clicada
 function obterMovimentosValidos(origem) {
@@ -69,20 +71,48 @@ function aoMover(source, target) {
 
 // Inicializa o tabuleiro
 document.addEventListener('DOMContentLoaded', () => {
-    board = Chessboard('board', {
-        draggable: true,
-        pieceTheme: './img/chesspieces/wikipedia/{piece}.png',
-        position: 'start',
+  board = Chessboard('board', {
+      draggable: true,
+      pieceTheme: './img/chesspieces/wikipedia/{piece}.png',
+      position: 'start',
 
-        onDragStart: (source) => {
-            const movimentos = obterMovimentosValidos(source);
-            destacarQuadrados(movimentos);
-        },
+      onClick: (square) => {
+          // Obtém os movimentos válidos para a peça que está sendo clicada
+          const movimentos = obterMovimentosValidos(square);
+          if (movimentos.length > 0) {
+              // Destaca os quadrados válidos para a peça clicada
+              destacarQuadrados(movimentos);
+          } else {
+              // Caso o clique não tenha movimentos válidos, remover os destaques
+              removerDestaques();
+          }
+      },
 
-        onDrop: (source, target) => {
-            aoMover(source, target);
-        }
-    });
+      onDragStart: (source) => {
+          const movimentos = obterMovimentosValidos(source);
+          destacarQuadrados(movimentos);  // Destaca os movimentos válidos ao arrastar
+      },
 
-    atualizarEstado();
+      onDrop: (source, target) => {
+          aoMover(source, target);  // Envia o movimento para o backend
+      }
+  });
+
+  // Atualiza o estado inicial do jogo
+  atualizarEstado();
 });
+
+// Função para obter os movimentos válidos para a peça clicada
+function obterMovimentosValidos(origem) {
+  const movimentos = [];
+  if (!gameState || !gameState.legal_moves) return movimentos;
+
+  // Filtra os movimentos válidos que começam a partir da posição 'origem'
+  gameState.legal_moves.forEach(mov => {
+      if (mov.startsWith(origem)) {
+          movimentos.push(mov.substring(2, 4));  // Retorna apenas o destino do movimento
+      }
+  });
+
+  return movimentos;
+}
